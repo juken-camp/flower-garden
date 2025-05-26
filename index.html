@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>FLOWER GARDEN PUZZLE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #4a7c59;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #6b8e6b;
+            font-weight: 400;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .difficulty-btn {
+            padding: 10px 12px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #c8e6c9;
+            color: #2e7d32;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            flex: 1;
+            text-align: center;
+            min-width: 0;
+        }
+
+        .difficulty-btn.active {
+            background: #66bb6a;
+            color: #f1f8e9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 187, 106, 0.4);
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .game-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .info-box {
+            background: #81c784;
+            color: #f1f8e9;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1em;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .game-board-container {
+            background: #a5d6a7;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            max-width: 95vw;
+            overflow: auto;
+            position: relative;
+        }
+
+        .game-board {
+            display: grid;
+            gap: 2px;
+            background: #81c784;
+            border-radius: 10px;
+            padding: 5px;
+            margin: 0 auto;
+        }
+
+        .cell {
+            background: #c8e6c9;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            user-select: none;
+        }
+
+        .cell:hover:not(.revealed):not(.sprayed) {
+            background: #dcedc8;
+            transform: scale(1.05);
+        }
+
+        .cell.revealed {
+            background: #f1f8e9;
+            cursor: default;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cell.sprayed {
+            background: #81d4fa;
+            color: #f1f8e9;
+        }
+
+        .cell.bug {
+            background: #ff8a65 !important;
+            color: #f1f8e9;
+            animation: wiggle 0.5s ease;
+        }
+
+        .cell.flower {
+            background: #ffcdd2;
+            animation: bloom 0.8s ease;
+        }
+
+        .cell.number-1 { color: #1976d2; }
+        .cell.number-2 { color: #388e3c; }
+        .cell.number-3 { color: #f57c00; }
+        .cell.number-4 { color: #7b1fa2; }
+        .cell.number-5 { color: #d32f2f; }
+        .cell.number-6 { color: #00796b; }
+        .cell.number-7 { color: #5d4037; }
+        .cell.number-8 { color: #424242; }
+
+        .controls-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .new-game-btn, .help-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .new-game-btn {
+            background: #66bb6a;
+            color: #f1f8e9;
+        }
+
+        .help-btn {
+            background: #81c784;
+            color: #f1f8e9;
+        }
+
+        .new-game-btn:hover, .help-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 187, 106, 0.4);
+        }
+
+        .game-status {
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-align: center;
+            min-height: 1.2em;
+            white-space: nowrap;
+        }
+
+        .status-playing { color: #4a7c59; }
+        .status-won { color: #66bb6a; }
+        .status-lost { color: #ff8a65; }
+
+        .zoom-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 50%;
+            background: #66bb6a;
+            color: #f1f8e9;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: #4caf50;
+            transform: scale(1.1);
+        }
+
+        /* ポップアップスタイル */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: #f1f8e9;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .popup-content h2 {
+            color: #4a7c59;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.6em;
+        }
+
+        .popup-content .instructions {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .popup-content .instructions p {
+            color: #6b8e6b;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .popup-close-btn {
+            background: #66bb6a;
+            color: #f1f8e9;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .popup-close-btn:hover {
+            background: #4caf50;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 187, 106, 0.4);
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        @keyframes bloom {
+            0% { transform: scale(0.8) rotate(-180deg); opacity: 0.5; }
+            50% { transform: scale(1.1) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes spray {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .cell.sprayed {
+            animation: spray 0.3s ease;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 600px) {
+            .title {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+            
+            .difficulty-btn {
+                padding: 8px 6px;
+                font-size: 0.75em;
+            }
+            
+            .game-info {
+                gap: 10px;
+            }
+            
+            .info-box {
+                padding: 6px 12px;
+                font-size: 0.9em;
+            }
+
+            .new-game-btn, .help-btn {
+                padding: 10px 16px;
+                font-size: 0.9em;
+            }
+
+            .zoom-controls {
+                display: flex;
+            }
+
+            .game-status {
+                font-size: 0.8em;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .difficulty-btn {
+                padding: 6px 4px;
+                font-size: 0.7em;
+            }
+
+            .popup-content {
+                padding: 20px;
+                max-width: 300px;
+            }
+
+            .popup-content h2 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">🌻 FLOWER GARDEN</h1>
+        <p class="subtitle">Beautiful Blooming Puzzle Game</p>
+    </div>
+
+    <div class="game-controls">
+        <button class="difficulty-btn active" data-difficulty="beginner">小花壇<br>(9×9)</button>
+        <button class="difficulty-btn" data-difficulty="intermediate">中庭<br>(12×12)</button>
+        <button class="difficulty-btn" data-difficulty="expert">大庭<br>(16×16)</button>
+    </div>
+
+    <div class="game-info">
+        <div class="info-box">
+            <div>🐛 害虫: <span id="bug-count">10</span></div>
+        </div>
+        <div class="info-box">
+            <div>⏰ 時間: <span id="timer">000</span></div>
+        </div>
+    </div>
+
+    <div class="game-status status-playing" id="game-status">タップ：花を咲かせる　長押し：殺虫剤</div>
+
+    <div class="game-board-container">
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <button class="zoom-btn" onclick="zoomOut()">-</button>
+            <button class="zoom-btn" onclick="resetZoom()">⌂</button>
+        </div>
+        <div class="game-board" id="game-board"></div>
+    </div>
+
+    <div class="controls-container">
+        <button class="new-game-btn" onclick="newGame()">🌱 新しい花壇</button>
+        <button class="help-btn" onclick="showHelp()">❓ 遊び方</button>
+    </div>
+
+    <!-- 遊び方ポップアップ -->
+    <div class="popup-overlay" id="help-popup">
+        <div class="popup-content">
+            <h2>🌸 遊び方</h2>
+            <div class="instructions">
+                <p>• <strong>タップ</strong>で花を咲かせます</p>
+                <p>• <strong>長押し</strong>で殺虫剤をスプレーします</p>
+                <p>• 数字は周囲8マスの害虫の数を示します</p>
+                <p>• 害虫を避けて全ての花を咲かせましょう！</p>
+                <p>• 害虫に触れるとゲームオーバーです</p>
+                <p>• 美しい花畑を完成させよう！</p>
+                <p>• ピンチズームで拡大縮小できます</p>
+            </div>
+            <button class="popup-close-btn" onclick="closeHelp()">ゲームを始める！</button>
+        </div>
+    </div>
+
+    <script>
+        // 効果音のコンテキスト作成
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioContext;
+
+        // 効果音生成関数
+        function createSound(type, frequency, duration, volume = 0.1) {
+            if (!audioContext) {
+                audioContext = new AudioContext();
+            }
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+            
+            oscillator.type = type;
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playBloomSound() {
+            createSound('sine', 880, 0.15, 0.06);
+        }
+
+        function playSpraySound() {
+            createSound('square', 400, 0.2, 0.05);
+        }
+
+        function playWinSound() {
+            setTimeout(() => createSound('sine', 523, 0.2, 0.08), 0);
+            setTimeout(() => createSound('sine', 659, 0.2, 0.08), 200);
+            setTimeout(() => createSound('sine', 784, 0.4, 0.08), 400);
+        }
+
+        function playBugSound() {
+            createSound('sawtooth', 150, 0.5, 0.08);
+        }
+
+        // ゲーム変数
+        let board = [];
+        let gameState = 'playing';
+        let bugs = [];
+        let revealed = [];
+        let sprayed = [];
+        let startTime;
+        let timer;
+        let currentDifficulty = 'beginner';
+        let zoomLevel = 1;
+        let isFirstTime = !localStorage.getItem('flowerGamePlayed');
+
+        const difficulties = {
+            beginner: { rows: 9, cols: 9, bugCount: 10 },
+            intermediate: { rows: 12, cols: 12, bugCount: 20 },
+            expert: { rows: 16, cols: 16, bugCount: 40 }
+        };
+
+        // 花の絵文字配列
+        const flowers = ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '💐', '🏵️'];
+
+        // ズーム機能
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 0.2, 2);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 0.2, 0.5);
+            applyZoom();
+        }
+
+        function resetZoom() {
+            zoomLevel = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.style.transform = `scale(${zoomLevel})`;
+            gameBoard.style.transformOrigin = 'center';
+        }
+
+        // セルサイズ計算
+        function calculateCellSize() {
+            const config = difficulties[currentDifficulty];
+            const containerWidth = Math.min(window.innerWidth - 80, 500);
+            const cellSize = Math.floor((containerWidth - 40) / config.cols);
+            return Math.max(Math.min(cellSize, 32), 18);
+        }
+
+        // ヘルプ表示/非表示
+        function showHelp() {
+            document.getElementById('help-popup').style.display = 'flex';
+        }
+
+        function closeHelp() {
+            document.getElementById('help-popup').style.display = 'none';
+            if (isFirstTime) {
+                localStorage.setItem('flowerGamePlayed', 'true');
+                isFirstTime = false;
+            }
+        }
+
+        // ゲーム初期化
+        function initGame() {
+            const config = difficulties[currentDifficulty];
+            board = Array(config.rows).fill().map(() => Array(config.cols).fill(0));
+            bugs = Array(config.rows).fill().map(() => Array(config.cols).fill(false));
+            revealed = Array(config.rows).fill().map(() => Array(config.cols).fill(false));
+            sprayed = Array(config.rows).fill().map(() => Array(config.cols).fill(false));
+            gameState = 'playing';
+            startTime = null;
+            zoomLevel = 1;
+            
+            updateDisplay();
+            createBoard();
+            placeBugs();
+            calculateNumbers();
+            applyZoom();
+        }
+
+        // 盤面作成
+        function createBoard() {
+            const config = difficulties[currentDifficulty];
+            const gameBoard = document.getElementById('game-board');
+            const cellSize = calculateCellSize();
+            
+            gameBoard.innerHTML = '';
+            gameBoard.style.gridTemplateColumns = `repeat(${config.cols}, ${cellSize}px)`;
+            
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = cellSize + 'px';
+                    cell.style.height = cellSize + 'px';
+                    cell.style.fontSize = Math.max(cellSize * 0.6, 10) + 'px';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // タッチ操作
+                    let touchTimer;
+                    let touchHandled = false;
+                    
+                    cell.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        touchHandled = false;
+                        touchTimer = setTimeout(() => {
+                            touchHandled = true;
+                            handleRightClick(row, col);
+                        }, 500);
+                    });
+                    
+                    cell.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        if (touchTimer) {
+                            clearTimeout(touchTimer);
+                        }
+                        if (!touchHandled) {
+                            handleCellClick(row, col);
+                        }
+                    });
+                    
+                    cell.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                        if (touchTimer) {
+                            clearTimeout(touchTimer);
+                            touchTimer = null;
+                        }
+                    });
+
+                    // マウス操作（PC用）
+                    cell.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleCellClick(row, col);
+                    });
+                    
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleRightClick(row, col);
+                    });
+                    
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        // 害虫配置
+        function placeBugs() {
+            const config = difficulties[currentDifficulty];
+            let bugsPlaced = 0;
+            
+            while (bugsPlaced < config.bugCount) {
+                const row = Math.floor(Math.random() * config.rows);
+                const col = Math.floor(Math.random() * config.cols);
+                
+                if (!bugs[row][col]) {
+                    bugs[row][col] = true;
+                    bugsPlaced++;
+                }
+            }
+        }
+
+        // 数字計算
+        function calculateNumbers() {
+            const config = difficulties[currentDifficulty];
+            
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (!bugs[row][col]) {
+                        let count = 0;
+                        for (let i = -1; i <= 1; i++) {
+                            for (let j = -1; j <= 1; j++) {
+                                const newRow = row + i;
+                                const newCol = col + j;
+                                if (newRow >= 0 && newRow < config.rows && 
+                                    newCol >= 0 && newCol < config.cols && 
+                                    bugs[newRow][newCol]) {
+                                    count++;
+                                }
+                            }
+                        }
+                        board[row][col] = count;
+                    }
+                }
+            }
+        }
+
+        // セルクリック処理（花を咲かせる）
+        function handleCellClick(row, col) {
+            if (gameState !== 'playing' || sprayed[row][col] || revealed[row][col]) {
+                return;
+            }
+
+            if (!startTime) {
+                startTime = Date.now();
+                startTimer();
+            }
+
+            if (bugs[row][col]) {
+                gameState = 'lost';
+                revealAllBugs();
+                updateDisplay();
+                playBugSound();
+                return;
+            }
+
+            revealCell(row, col);
+            checkWin();
+        }
+
+        // 右クリック処理（殺虫剤）
+        function handleRightClick(row, col) {
+            if (gameState !== 'playing' || revealed[row][col]) {
+                return;
+            }
+
+            sprayed[row][col] = !sprayed[row][col];
+            updateCellDisplay(row, col);
+            updateDisplay();
+            playSpraySound();
+        }
+
+        // セル開放（花を咲かせる）
+        function revealCell(row, col) {
+            const config = difficulties[currentDifficulty];
+            
+            if (row < 0 || row >= config.rows || col < 0 || col >= config.cols || 
+                revealed[row][col] || sprayed[row][col]) {
+                return;
+            }
+
+            revealed[row][col] = true;
+            updateCellDisplay(row, col);
+            playBloomSound();
+
+            if (board[row][col] === 0) {
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        revealCell(row + i, col + j);
+                    }
+                }
+            }
+        }
+
+        // 全害虫表示
+        function revealAllBugs() {
+            const config = difficulties[currentDifficulty];
+            
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (bugs[row][col]) {
+                        revealed[row][col] = true;
+                        updateCellDisplay(row, col);
+                    }
+                }
+            }
+        }
+
+        // セル表示更新
+        function updateCellDisplay(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            
+            if (sprayed[row][col]) {
+                cell.className = 'cell sprayed';
+                cell.textContent = '🧴';
+            } else if (revealed[row][col]) {
+                if (bugs[row][col]) {
+                    cell.className = 'cell bug';
+                    cell.textContent = '🐛';
+                } else {
+                    cell.className = 'cell revealed';
+                    if (board[row][col] > 0) {
+                        cell.textContent = board[row][col];
+                        cell.classList.add(`number-${board[row][col]}`);
+                    } else {
+                        cell.className = 'cell revealed flower';
+                        cell.textContent = flowers[Math.floor(Math.random() * flowers.length)];
+                    }
+                }
+            } else {
+                cell.className = 'cell';
+                cell.textContent = '';
+            }
+        }
+
+        // 勝利判定
+        function checkWin() {
+            const config = difficulties[currentDifficulty];
+            let revealedCount = 0;
+            
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (revealed[row][col]) {
+                        revealedCount++;
+                    }
+                }
+            }
+            
+            if (revealedCount === config.rows * config.cols - config.bugCount) {
+                gameState = 'won';
+                stopTimer();
+                updateDisplay();
+                playWinSound();
+            }
+        }
+
+        // 表示更新
+        function updateDisplay() {
+            const config = difficulties[currentDifficulty];
+            let sprayCount = 0;
+            
+            for (let row = 0; row < config.rows; row++) {
+                for (let col = 0; col < config.cols; col++) {
+                    if (sprayed[row][col]) sprayCount++;
+                }
+            }
+            
+            document.getElementById('bug-count').textContent = config.bugCount - sprayCount;
+            
+            const statusElement = document.getElementById('game-status');
+            if (gameState === 'playing') {
+                statusElement.textContent = 'タップ：花を咲かせる　長押し：殺虫剤';
+                statusElement.className = 'game-status status-playing';
+            } else if (gameState === 'won') {
+                statusElement.textContent = '🌺 素晴らしい！美しい花畑の完成です！';
+                statusElement.className = 'game-status status-won';
+            } else {
+                statusElement.textContent = '🐛 害虫に刺されました！もう一度挑戦しよう！';
+                statusElement.className = 'game-status status-lost';
+            }
+        }
+
+        // タイマー
+        function startTimer() {
+            timer = setInterval(() => {
+                if (gameState === 'playing') {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    document.getElementById('timer').textContent = elapsed.toString().padStart(3, '0');
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timer) {
+                clearInterval(timer);
+            }
+        }
+
+        // 新しいゲーム
+        function newGame() {
+            stopTimer();
+            document.getElementById('timer').textContent = '000';
+            initGame();
+        }
+
+        // 難易度変更
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentDifficulty = btn.dataset.difficulty;
+                newGame();
+            });
+        });
+
+        // 画面リサイズ対応
+        window.addEventListener('resize', () => {
+            createBoard();
+            for (let row = 0; row < difficulties[currentDifficulty].rows; row++) {
+                for (let col = 0; col < difficulties[currentDifficulty].cols; col++) {
+                    updateCellDisplay(row, col);
+                }
+            }
+            applyZoom();
+        });
+
+        // ゲーム開始
+        initGame();
+
+        // 初回訪問時にヘルプを表示
+        if (isFirstTime) {
+            setTimeout(() => {
+                showHelp();
+            }, 500);
+        }
+    </script>
+</body>
+</html>
